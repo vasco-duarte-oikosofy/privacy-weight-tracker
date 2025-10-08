@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { Trash2, History, Weight } from 'lucide-react';
+import { Trash2, History, Weight, Download } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,6 +67,26 @@ function HistoryItem({ entry }: { entry: WeightEntry }) {
 export function WeightHistory() {
   const entries = useWeightStore((state) => state.entries);
   const sortedEntries = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const handleExport = () => {
+    // Sort entries by date ascending for export
+    const sortedForExport = [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Create CSV content
+    const csvContent = sortedForExport.map(entry => `${entry.date},${entry.weight.toFixed(1)}`).join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `weight-data-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Card className="w-full animate-fade-in" style={{ animationDelay: '300ms' }}>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -74,7 +94,13 @@ export function WeightHistory() {
           <History className="h-6 w-6 text-slate-500" />
           History
         </CardTitle>
-        <WeightImportDialog />
+        <div className="flex gap-2">
+          <Button onClick={handleExport} variant="outline" size="sm" disabled={entries.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <WeightImportDialog />
+        </div>
       </CardHeader>
       <CardContent>
         {sortedEntries.length > 0 ? (
