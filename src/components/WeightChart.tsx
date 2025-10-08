@@ -77,9 +77,21 @@ export function WeightChart() {
                 allowDataOverflow={true}
                 width={60}
               />
+              <ReferenceLine
+                y={upperControlLine}
+                stroke="rgb(239 68 68)"
+                strokeDasharray="3 3"
+                strokeWidth={1.5}
+                label={{ value: `${upperControlLine.toFixed(1)}kg`, position: 'right', fill: 'rgb(239 68 68)', fontSize: 12 }}
+              />
+              <ReferenceLine
+                y={lowerControlLine}
+                stroke="rgb(239 68 68)"
+                strokeDasharray="3 3"
+                strokeWidth={1.5}
+                label={{ value: `${lowerControlLine.toFixed(1)}kg`, position: 'right', fill: 'rgb(239 68 68)', fontSize: 12 }}
+              />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-              <ReferenceLine y={upperControlLine} stroke="rgb(239 68 68)" strokeDasharray="3 3" strokeWidth={1.5} />
-              <ReferenceLine y={lowerControlLine} stroke="rgb(239 68 68)" strokeDasharray="3 3" strokeWidth={1.5} />
               <Bar dataKey="weight" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
