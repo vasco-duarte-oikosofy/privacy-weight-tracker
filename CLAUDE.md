@@ -52,4 +52,13 @@ worker/             # Cloudflare Workers setup (minimal/static serving)
 4. All data stays in browser—never leaves device
 
 ## Deployment
-Configured for Cloudflare deployment via Wrangler. Worker serves static assets; app runs entirely client-side.
+
+### Standalone Mode
+Build single-file HTML with `bun run build:standalone`:
+- Generates `dist-standalone/index.html` (~967KB)
+- All CSS/JS inlined via vite-plugin-singlefile
+- Can be opened directly in browser (file://)
+- No server required
+
+### Cloudflare Mode
+Standard build for Cloudflare deployment via Wrangler. Worker serves static assets; app runs entirely client-side.

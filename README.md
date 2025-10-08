@@ -82,13 +82,26 @@ The application is designed to be intuitive and straightforward:
 ## Development Scripts
 
 *   `bun run dev`: Starts the Vite development server.
-*   `bun run build`: Builds the application for production.
+*   `bun run build`: Builds the application for production (Cloudflare deployment).
+*   `bun run build:standalone`: Builds a single-file HTML app that can be opened directly in a browser.
 *   `bun run lint`: Runs the ESLint linter to check for code quality issues.
 *   `bun run deploy`: Deploys the application to Cloudflare.
 
 ## Deployment
 
-This project is pre-configured for seamless deployment to the Cloudflare global network via Wrangler.
+### Option 1: Standalone Single-File App (No Server Required)
+
+The simplest way to use this app is to build a standalone HTML file that you can open directly in your browser:
+
+```sh
+bun run build:standalone
+```
+
+This creates a single `index.html` file in the `dist-standalone/` directory containing all CSS and JavaScript inlined. Simply open this file in any modern browser and start tracking your weight. All data is stored in your browser's local storage, so it persists between sessions.
+
+### Option 2: Cloudflare Deployment
+
+This project is also pre-configured for deployment to the Cloudflare global network via Wrangler.
 
 To deploy your application, simply run the following command:
 
