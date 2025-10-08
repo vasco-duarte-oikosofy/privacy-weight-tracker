@@ -1,5 +1,5 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { format, eachDayOfInterval, parseISO } from 'date-fns';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Brush } from 'recharts';
+import { format, eachDayOfInterval, parseISO, subDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWeightStore } from "@/hooks/use-weight-store";
 import { TrendingUp } from 'lucide-react';
@@ -32,12 +32,16 @@ export function WeightChart() {
   // Create a map of date strings to entries for quick lookup
   const entriesMap = new Map(entries.map(e => [e.date, e]));
 
-  // Get the date range from first to last entry
+  // Get the date range - show from earliest entry to today
   const firstDate = parseISO(entries[0].date);
-  const lastDate = parseISO(entries[entries.length - 1].date);
+  const today = new Date();
 
   // Generate all dates in the range
-  const allDates = eachDayOfInterval({ start: firstDate, end: lastDate });
+  const allDates = eachDayOfInterval({ start: firstDate, end: today });
+
+  // Calculate default view (last 30 days)
+  const defaultStartIndex = Math.max(0, allDates.length - 30);
+  const defaultEndIndex = allDates.length - 1;
 
   // Create chart data with gaps for missing dates
   const chartData = allDates.map((date, index) => {
@@ -129,6 +133,14 @@ export function WeightChart() {
                 strokeWidth={1.5}
                 isFront={true}
                 label={{ value: `${lowerControlLine.toFixed(1)}kg`, position: 'right', fill: 'rgb(239 68 68)', fontSize: 12 }}
+              />
+              <Brush
+                dataKey="date"
+                height={30}
+                stroke="hsl(var(--border))"
+                fill="hsl(var(--muted))"
+                startIndex={defaultStartIndex}
+                endIndex={defaultEndIndex}
               />
             </BarChart>
           </ResponsiveContainer>
