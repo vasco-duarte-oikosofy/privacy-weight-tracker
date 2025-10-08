@@ -23,16 +23,19 @@ export function HomePage() {
   const entries = useWeightStore((state) => state.entries);
   const { isDark } = useTheme();
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-slate-900 dark:via-slate-900 dark:to-orange-950 text-slate-800 dark:text-slate-200 font-sans">
       <main className="container mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <div className="absolute top-6 right-6">
           <ThemeToggle />
         </div>
         <header className="text-center mb-12">
-          <h1 className="font-display text-5xl md:text-6xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Momentum
-          </h1>
-          <p className="mt-3 text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+          <div className="flex items-center justify-center gap-4 mb-3">
+            <img src="/logo.png" alt="Momentum Logo" className="w-16 h-16 md:w-20 md:h-20" />
+            <h1 className="font-display text-5xl md:text-6xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent tracking-tight">
+              Momentum
+            </h1>
+          </div>
+          <p className="mt-3 text-lg text-orange-700 dark:text-orange-300 max-w-md mx-auto">
             A privacy-first, on-device visual weight tracker.
           </p>
         </header>

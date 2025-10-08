@@ -71,7 +71,7 @@ export function WeightChart() {
     return {
       date: format(date, 'MMM d'),
       weight: parseFloat(entry.weight.toFixed(1)),
-      fill: prevWeight === null ? 'rgb(71 85 105)' : entry.weight < prevWeight ? 'rgb(34 197 94)' : 'rgb(71 85 105)'
+      fill: prevWeight === null ? 'rgb(249 115 22)' : entry.weight < prevWeight ? 'rgb(34 197 94)' : 'rgb(249 115 22)'
     };
   });
   const weights = entries.map(e => e.weight);
