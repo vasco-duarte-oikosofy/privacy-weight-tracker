@@ -29,10 +29,11 @@ export function WeightChart() {
   if (entries.length === 0) {
     return null;
   }
-  const chartData = entries.map(entry => ({
+  const chartData = entries.map((entry, index) => ({
     ...entry,
     date: format(new Date(entry.date), 'MMM d'),
     weight: parseFloat(entry.weight.toFixed(1)),
+    fill: index === 0 ? 'rgb(71 85 105)' : entry.weight < entries[index - 1].weight ? 'rgb(34 197 94)' : 'rgb(71 85 105)'
   }));
   const weights = entries.map(e => e.weight);
   const minWeight = Math.min(...weights);
@@ -68,7 +69,7 @@ export function WeightChart() {
                 width={60}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-              <Bar dataKey="weight" fill="rgb(71 85 105)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="weight" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
