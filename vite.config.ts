@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import { exec } from "node:child_process";
 import pino from "pino";
 import { cloudflare } from "@cloudflare/vite-plugin";
+import { viteSingleFile } from "vite-plugin-singlefile";
 
 const logger = pino();
 
@@ -88,19 +89,30 @@ function watchDependenciesPlugin() {
 // https://vite.dev/config/
 export default ({ mode }: { mode: string }) => {
   const env = loadEnv(mode, process.cwd());
+  const isStandalone = env.VITE_BUILD_STANDALONE === 'true';
+
   return defineConfig({
-    plugins: [react(), cloudflare(), watchDependenciesPlugin()],
+    plugins: [
+      react(),
+      !isStandalone && cloudflare(),
+      !isStandalone && watchDependenciesPlugin(),
+      isStandalone && viteSingleFile()
+    ].filter(Boolean),
+    base: isStandalone ? './' : '/',
     build: {
       minify: true,
-      sourcemap: "inline", // Use inline source maps for better error reporting
+      sourcemap: isStandalone ? false : "inline",
+      cssCodeSplit: false,
+      assetsInlineLimit: 100000000,
       rollupOptions: {
         output: {
-          sourcemapExcludeSources: false, // Include original source in source maps
+          sourcemapExcludeSources: false,
+          inlineDynamicImports: true,
         },
       },
+      outDir: isStandalone ? 'dist-standalone' : 'dist/client',
     },
     customLogger: env.VITE_LOGGER_TYPE === 'json' ? customLogger : undefined,
-    // Enable source maps in development too
     css: {
       devSourcemap: true,
     },
@@ -114,17 +126,13 @@ export default ({ mode }: { mode: string }) => {
       },
     },
     optimizeDeps: {
-      // This is still crucial for reducing the time from when `bun run dev`
-      // is executed to when the server is actually ready.
-      include: ["react", "react-dom", "react-router-dom"],
-      exclude: ["agents"], // Exclude agents package from pre-bundling due to Node.js dependencies
+      include: ["react", "react-dom"],
+      exclude: ["agents"],
       force: true,
     },
     define: {
-      // Define Node.js globals for the agents package
       global: "globalThis",
     },
-    // Clear cache more aggressively
     cacheDir: "node_modules/.vite",
   });
 };
