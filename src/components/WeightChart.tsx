@@ -54,7 +54,7 @@ export function WeightChart() {
       <CardContent>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis
@@ -65,7 +65,7 @@ export function WeightChart() {
                 tickFormatter={(value) => `${value}kg`}
                 domain={yAxisDomain}
                 allowDataOverflow={true}
-                width={40}
+                width={60}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
               <Bar dataKey="weight" fill="rgb(71 85 105)" radius={[4, 4, 0, 0]} />
