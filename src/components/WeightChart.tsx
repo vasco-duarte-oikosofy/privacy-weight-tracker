@@ -77,11 +77,14 @@ export function WeightChart() {
                 allowDataOverflow={true}
                 width={60}
               />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+              <Bar dataKey="weight" radius={[4, 4, 0, 0]} />
               <ReferenceLine
                 y={upperControlLine}
                 stroke="rgb(239 68 68)"
                 strokeDasharray="3 3"
                 strokeWidth={1.5}
+                isFront={true}
                 label={{ value: `${upperControlLine.toFixed(1)}kg`, position: 'right', fill: 'rgb(239 68 68)', fontSize: 12 }}
               />
               <ReferenceLine
@@ -89,10 +92,9 @@ export function WeightChart() {
                 stroke="rgb(239 68 68)"
                 strokeDasharray="3 3"
                 strokeWidth={1.5}
+                isFront={true}
                 label={{ value: `${lowerControlLine.toFixed(1)}kg`, position: 'right', fill: 'rgb(239 68 68)', fontSize: 12 }}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-              <Bar dataKey="weight" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
