@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWeightStore } from "@/hooks/use-weight-store";
@@ -38,6 +38,15 @@ export function WeightChart() {
   const weights = entries.map(e => e.weight);
   const minWeight = Math.min(...weights);
   const maxWeight = Math.max(...weights);
+
+  // Calculate average and standard deviation
+  const average = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+  const variance = weights.reduce((sum, w) => sum + Math.pow(w - average, 2), 0) / weights.length;
+  const stdDev = Math.sqrt(variance);
+
+  const upperControlLine = average + stdDev;
+  const lowerControlLine = average - stdDev;
+
   // Handle domain calculation gracefully for single or multiple data points.
   // If min and max are the same, create a sensible range around that value.
   const yAxisDomain = [
@@ -69,6 +78,8 @@ export function WeightChart() {
                 width={60}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+              <ReferenceLine y={upperControlLine} stroke="rgb(239 68 68)" strokeDasharray="3 3" strokeWidth={1.5} />
+              <ReferenceLine y={lowerControlLine} stroke="rgb(239 68 68)" strokeDasharray="3 3" strokeWidth={1.5} />
               <Bar dataKey="weight" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
