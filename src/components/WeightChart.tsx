@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWeightStore } from "@/hooks/use-weight-store";
 import { TrendingUp } from 'lucide-react';
@@ -29,12 +29,47 @@ export function WeightChart() {
   if (entries.length === 0) {
     return null;
   }
-  const chartData = entries.map((entry, index) => ({
-    ...entry,
-    date: format(new Date(entry.date), 'MMM d'),
-    weight: parseFloat(entry.weight.toFixed(1)),
-    fill: index === 0 ? 'rgb(71 85 105)' : entry.weight < entries[index - 1].weight ? 'rgb(34 197 94)' : 'rgb(71 85 105)'
-  }));
+  // Create a map of date strings to entries for quick lookup
+  const entriesMap = new Map(entries.map(e => [e.date, e]));
+
+  // Get the date range from first to last entry
+  const firstDate = parseISO(entries[0].date);
+  const lastDate = parseISO(entries[entries.length - 1].date);
+
+  // Generate all dates in the range
+  const allDates = eachDayOfInterval({ start: firstDate, end: lastDate });
+
+  // Create chart data with gaps for missing dates
+  const chartData = allDates.map((date, index) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const entry = entriesMap.get(dateStr);
+
+    if (!entry) {
+      // Missing date - show gap
+      return {
+        date: format(date, 'MMM d'),
+        weight: null,
+        fill: 'transparent'
+      };
+    }
+
+    // Find previous actual entry (not null) for color comparison
+    let prevWeight = null;
+    for (let i = index - 1; i >= 0; i--) {
+      const prevDateStr = format(allDates[i], 'yyyy-MM-dd');
+      const prevEntry = entriesMap.get(prevDateStr);
+      if (prevEntry) {
+        prevWeight = prevEntry.weight;
+        break;
+      }
+    }
+
+    return {
+      date: format(date, 'MMM d'),
+      weight: parseFloat(entry.weight.toFixed(1)),
+      fill: prevWeight === null ? 'rgb(71 85 105)' : entry.weight < prevWeight ? 'rgb(34 197 94)' : 'rgb(71 85 105)'
+    };
+  });
   const weights = entries.map(e => e.weight);
   const minWeight = Math.min(...weights);
   const maxWeight = Math.max(...weights);
