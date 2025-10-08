@@ -30,7 +30,7 @@ export function HomePage() {
         </div>
         <header className="text-center mb-12">
           <div className="flex items-center justify-center gap-4 mb-3">
-            <img src="/logo.png" alt="Momentum Logo" className="w-16 h-16 md:w-20 md:h-20" />
+            <img src="logo.png" alt="Momentum Logo" className="w-16 h-16 md:w-20 md:h-20" />
             <h1 className="font-display text-5xl md:text-6xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent tracking-tight">
               Momentum
             </h1>
