@@ -3,22 +3,45 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { format, parse, isValid } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { LBS_TO_KG_CONVERSION_FACTOR } from '@/lib/constants';
+
 export type WeightUnit = 'kg' | 'lbs';
+
 export interface WeightEntry {
   id: string;
   date: string; // YYYY-MM-DD format
   weight: number; // Always in KG
 }
+
+export interface GoalSettings {
+  targetWeight?: number;      // Target weight in kg
+  targetDate?: string;         // Optional target date (YYYY-MM-DD)
+  startWeight?: number;        // Weight when goal was set (kg)
+  startDate?: string;          // Date when goal was set (YYYY-MM-DD)
+}
+
+export interface AppState {
+  entries: WeightEntry[];
+  goal: GoalSettings | null;
+  exportedAt?: string;
+  version?: string;
+}
+
 interface WeightState {
   entries: WeightEntry[];
+  goal: GoalSettings | null;
   addEntry: (weight: number, unit: WeightUnit, date: Date) => void;
   removeEntry: (id: string) => void;
   importEntries: (csvData: string, unit: WeightUnit) => { importedCount: number; errorCount: number };
+  setGoal: (targetWeight: number, targetDate?: string) => void;
+  clearGoal: () => void;
+  exportFullState: () => string;
+  importFullState: (jsonData: string) => { success: boolean; error?: string };
 }
 export const useWeightStore = create<WeightState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       entries: [],
+      goal: null,
       addEntry: (weight, unit, date) => {
         const dateString = format(date, 'yyyy-MM-dd');
         const weightInKg = unit === 'lbs' ? weight * LBS_TO_KG_CONVERSION_FACTOR : weight;
@@ -87,6 +110,71 @@ export const useWeightStore = create<WeightState>()(
           });
         }
         return { importedCount, errorCount };
+      },
+      setGoal: (targetWeight, targetDate) => {
+        const state = get();
+        const latestEntry = state.entries.length > 0 ? state.entries[state.entries.length - 1] : null;
+
+        set({
+          goal: {
+            targetWeight,
+            targetDate,
+            startWeight: latestEntry?.weight,
+            startDate: latestEntry?.date,
+          }
+        });
+      },
+      clearGoal: () => set({ goal: null }),
+      exportFullState: () => {
+        const state = get();
+        const exportData: AppState = {
+          entries: state.entries,
+          goal: state.goal,
+          exportedAt: new Date().toISOString(),
+          version: '1.0',
+        };
+        return JSON.stringify(exportData, null, 2);
+      },
+      importFullState: (jsonData: string) => {
+        try {
+          const importedData: AppState = JSON.parse(jsonData);
+
+          // Validate the data structure
+          if (!importedData || typeof importedData !== 'object') {
+            return { success: false, error: 'Invalid data format' };
+          }
+
+          if (!Array.isArray(importedData.entries)) {
+            return { success: false, error: 'Invalid entries data' };
+          }
+
+          // Validate entries
+          for (const entry of importedData.entries) {
+            if (!entry.id || !entry.date || typeof entry.weight !== 'number') {
+              return { success: false, error: 'Invalid entry format' };
+            }
+          }
+
+          // Validate goal if present
+          if (importedData.goal !== null && importedData.goal !== undefined) {
+            if (typeof importedData.goal !== 'object' || typeof importedData.goal.targetWeight !== 'number') {
+              return { success: false, error: 'Invalid goal format' };
+            }
+          }
+
+          // Import the data
+          set({
+            entries: importedData.entries,
+            goal: importedData.goal,
+          });
+
+          return { success: true };
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to parse JSON'
+          };
+        }
       },
     }),
     {
