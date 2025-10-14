@@ -191,7 +191,7 @@ Building an insights page with goal tracking, pattern recognition, and visual an
 
 ---
 
-## Phase 5: Pattern Recognition Analytics
+## Phase 5: Pattern Recognition Analytics ✅ COMPLETED
 **Goal**: Identify day-of-week and weekly patterns
 
 ### Tasks:
@@ -232,21 +232,29 @@ Building an insights page with goal tracking, pattern recognition, and visual an
 - `src/pages/InsightsPage.tsx` (add cards)
 
 ### Testing criteria:
-- [ ] Day-of-week averages calculate correctly
-- [ ] Weekend vs. weekday comparison is accurate
-- [ ] Plateau detection identifies stable periods
-- [ ] Charts render responsively
-- [ ] Handles sparse data gracefully
+- [x] Day-of-week averages calculate correctly
+- [x] Weekend vs. weekday comparison is accurate
+- [x] Plateau detection identifies stable periods
+- [x] Charts render responsively
+- [x] Handles sparse data gracefully
+
+**Completed**: 2025-10-14
+**Files created/modified**:
+- `src/lib/analytics.ts` (extended with 4 pattern functions)
+- `src/components/DayOfWeekCard.tsx` (new - bar chart visualization)
+- `src/components/WeeklyCycleCard.tsx` (new - comparison bars)
+- `src/components/PlateauCard.tsx` (new - plateau list)
+- `src/pages/InsightsPage.tsx` (updated - added Patterns & Trends section)
 
 ---
 
-## Phase 6: Visual Comparisons
+## Phase 6: Visual Comparisons ✅ COMPLETED
 **Goal**: Add distribution histogram and heatmap
 
 ### Tasks:
 1. **Add visualization utilities to analytics.ts**
    - `getWeightDistribution(entries, bucketSize): Array<{ range, count }>`
-   - `getDayOfWeekHeatmap(entries): Array<Array<{ date, weight, dayOfWeek }>>`
+   - `getHeatmapData(entries): Array<{ date, weight, dayOfWeek, weekNumber }>`
 
 2. **Create DistributionCard component**
    - New file: `src/components/DistributionCard.tsx`
@@ -257,10 +265,10 @@ Building an insights page with goal tracking, pattern recognition, and visual an
 
 3. **Create HeatmapCard component**
    - New file: `src/components/HeatmapCard.tsx`
-   - Grid layout: rows = weeks, columns = Mon-Sun
-   - Color intensity based on weight (darker = heavier)
-   - Tooltip on hover showing date and weight
-   - Use Recharts or custom SVG grid
+   - Grid layout: rows = weeks, columns = Sun-Sat
+   - Color gradient based on weight (green for lower, orange for higher)
+   - Hover tooltip showing date and weight
+   - Custom CSS grid implementation
 
 4. **Add to InsightsPage**
    - Place in "Visual Analysis" section
@@ -273,11 +281,18 @@ Building an insights page with goal tracking, pattern recognition, and visual an
 - `src/pages/InsightsPage.tsx` (add cards)
 
 ### Testing criteria:
-- [ ] Histogram shows weight distribution correctly
-- [ ] Heatmap colors reflect weight values
-- [ ] Tooltips display date and weight
-- [ ] Visualizations are mobile-responsive
-- [ ] Empty states for insufficient data
+- [x] Histogram shows weight distribution correctly
+- [x] Heatmap colors reflect weight values
+- [x] Tooltips display date and weight
+- [x] Visualizations are mobile-responsive
+- [x] Empty states for insufficient data
+
+**Completed**: 2025-10-14
+**Files created/modified**:
+- `src/lib/analytics.ts` (extended with 2 visualization functions)
+- `src/components/DistributionCard.tsx` (new - histogram with statistics)
+- `src/components/HeatmapCard.tsx` (new - calendar heatmap with hover)
+- `src/pages/InsightsPage.tsx` (updated - added Visual Analysis section)
 
 ---
 

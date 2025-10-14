@@ -205,3 +205,231 @@ export function getLongestStreak(entries: WeightEntry[]): number {
 export function hasEnoughData(entries: WeightEntry[], minDays: number = 14): boolean {
   return entries.length >= minDays;
 }
+
+/**
+ * Get average weight by day of week
+ */
+export function getAverageByDayOfWeek(entries: WeightEntry[]): Record<string, number> {
+  if (entries.length === 0) {
+    return {};
+  }
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayTotals: Record<number, { sum: number; count: number }> = {};
+
+  // Initialize all days
+  for (let i = 0; i < 7; i++) {
+    dayTotals[i] = { sum: 0, count: 0 };
+  }
+
+  // Sum up weights by day
+  entries.forEach((entry) => {
+    const date = parseISO(entry.date);
+    const dayOfWeek = date.getDay();
+    dayTotals[dayOfWeek].sum += entry.weight;
+    dayTotals[dayOfWeek].count += 1;
+  });
+
+  // Calculate averages
+  const result: Record<string, number> = {};
+  for (let i = 0; i < 7; i++) {
+    const dayName = dayNames[i];
+    if (dayTotals[i].count > 0) {
+      result[dayName] = dayTotals[i].sum / dayTotals[i].count;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Compare weekday vs. weekend average weights
+ */
+export function getWeekdayVsWeekendAverage(entries: WeightEntry[]): {
+  weekday: number;
+  weekend: number;
+  diff: number;
+} | null {
+  if (entries.length === 0) return null;
+
+  let weekdaySum = 0;
+  let weekdayCount = 0;
+  let weekendSum = 0;
+  let weekendCount = 0;
+
+  entries.forEach((entry) => {
+    const date = parseISO(entry.date);
+    const dayOfWeek = date.getDay();
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      // Weekend (Sunday = 0, Saturday = 6)
+      weekendSum += entry.weight;
+      weekendCount += 1;
+    } else {
+      // Weekday
+      weekdaySum += entry.weight;
+      weekdayCount += 1;
+    }
+  });
+
+  if (weekdayCount === 0 || weekendCount === 0) return null;
+
+  const weekdayAvg = weekdaySum / weekdayCount;
+  const weekendAvg = weekendSum / weekendCount;
+  const diff = weekendAvg - weekdayAvg;
+
+  return {
+    weekday: weekdayAvg,
+    weekend: weekendAvg,
+    diff,
+  };
+}
+
+/**
+ * Get monthly averages
+ */
+export function getMonthlyAverages(entries: WeightEntry[]): Array<{ month: string; avg: number }> {
+  if (entries.length === 0) return [];
+
+  const monthlyData: Record<string, { sum: number; count: number }> = {};
+
+  entries.forEach((entry) => {
+    const date = parseISO(entry.date);
+    const monthKey = format(date, "yyyy-MM"); // e.g., "2025-01"
+
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { sum: 0, count: 0 };
+    }
+
+    monthlyData[monthKey].sum += entry.weight;
+    monthlyData[monthKey].count += 1;
+  });
+
+  // Convert to array and calculate averages
+  return Object.entries(monthlyData)
+    .map(([month, data]) => ({
+      month,
+      avg: data.sum / data.count,
+    }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+}
+
+/**
+ * Detect plateaus (periods of stable weight)
+ */
+export function detectPlateau(
+  entries: WeightEntry[],
+  thresholdKg: number = 0.5,
+  minDays: number = 7
+): Array<{ start: string; end: string; avgWeight: number; days: number }> {
+  if (entries.length < minDays) return [];
+
+  const plateaus: Array<{ start: string; end: string; avgWeight: number; days: number }> = [];
+  let plateauStart = 0;
+
+  for (let i = 1; i < entries.length; i++) {
+    const plateauEntries = entries.slice(plateauStart, i + 1);
+    const weights = plateauEntries.map((e) => e.weight);
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+    const range = maxWeight - minWeight;
+
+    // If range exceeds threshold, end current plateau
+    if (range > thresholdKg) {
+      // Check if previous plateau was long enough
+      if (i - plateauStart >= minDays) {
+        const plateauSlice = entries.slice(plateauStart, i);
+        const avgWeight =
+          plateauSlice.reduce((sum, e) => sum + e.weight, 0) / plateauSlice.length;
+
+        plateaus.push({
+          start: entries[plateauStart].date,
+          end: entries[i - 1].date,
+          avgWeight,
+          days: i - plateauStart,
+        });
+      }
+      plateauStart = i;
+    }
+  }
+
+  // Check final plateau
+  if (entries.length - plateauStart >= minDays) {
+    const plateauSlice = entries.slice(plateauStart);
+    const avgWeight =
+      plateauSlice.reduce((sum, e) => sum + e.weight, 0) / plateauSlice.length;
+
+    plateaus.push({
+      start: entries[plateauStart].date,
+      end: entries[entries.length - 1].date,
+      avgWeight,
+      days: entries.length - plateauStart,
+    });
+  }
+
+  return plateaus;
+}
+
+/**
+ * Get weight distribution for histogram
+ * Groups weights into buckets and counts occurrences
+ */
+export function getWeightDistribution(
+  entries: WeightEntry[],
+  bucketSize: number = 0.5
+): Array<{ range: string; count: number; minWeight: number; maxWeight: number }> {
+  if (entries.length === 0) return [];
+
+  const weights = entries.map((e) => e.weight);
+  const minWeight = Math.min(...weights);
+  const maxWeight = Math.max(...weights);
+
+  // Create buckets
+  const buckets: Record<string, { count: number; min: number; max: number }> = {};
+
+  entries.forEach((entry) => {
+    const bucketMin = Math.floor(entry.weight / bucketSize) * bucketSize;
+    const bucketMax = bucketMin + bucketSize;
+    const key = `${bucketMin.toFixed(1)}-${bucketMax.toFixed(1)}`;
+
+    if (!buckets[key]) {
+      buckets[key] = { count: 0, min: bucketMin, max: bucketMax };
+    }
+    buckets[key].count += 1;
+  });
+
+  // Convert to sorted array
+  return Object.entries(buckets)
+    .map(([range, data]) => ({
+      range,
+      count: data.count,
+      minWeight: data.min,
+      maxWeight: data.max,
+    }))
+    .sort((a, b) => a.minWeight - b.minWeight);
+}
+
+/**
+ * Get heatmap data for calendar visualization
+ * Returns entries grouped by week with day-of-week positioning
+ */
+export function getHeatmapData(
+  entries: WeightEntry[]
+): Array<{ date: string; weight: number; dayOfWeek: number; weekNumber: number }> {
+  if (entries.length === 0) return [];
+
+  const firstDate = parseISO(entries[0].date);
+
+  return entries.map((entry) => {
+    const date = parseISO(entry.date);
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+    const weekNumber = Math.floor(differenceInDays(date, firstDate) / 7);
+
+    return {
+      date: entry.date,
+      weight: entry.weight,
+      dayOfWeek,
+      weekNumber,
+    };
+  });
+}

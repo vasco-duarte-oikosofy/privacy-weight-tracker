@@ -4,6 +4,11 @@ import { GoalSettingsCard } from "@/components/GoalSettingsCard";
 import { GoalProgressCard } from "@/components/GoalProgressCard";
 import { ForecastCard } from "@/components/ForecastCard";
 import { MilestonesCard } from "@/components/MilestonesCard";
+import { DayOfWeekCard } from "@/components/DayOfWeekCard";
+import { WeeklyCycleCard } from "@/components/WeeklyCycleCard";
+import { PlateauCard } from "@/components/PlateauCard";
+import { DistributionCard } from "@/components/DistributionCard";
+import { HeatmapCard } from "@/components/HeatmapCard";
 
 const EmptyState = () => (
   <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 animate-fade-in">
@@ -49,6 +54,35 @@ export function InsightsPage() {
 
             {/* Milestones */}
             <MilestonesCard />
+
+            {/* Pattern Recognition */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-8">
+                Patterns & Trends
+              </h2>
+
+              {/* Day of Week & Weekly Cycle */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DayOfWeekCard />
+                <WeeklyCycleCard />
+              </div>
+
+              {/* Plateau Detection */}
+              <PlateauCard />
+            </div>
+
+            {/* Visual Analysis */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-8">
+                Visual Analysis
+              </h2>
+
+              {/* Distribution & Heatmap */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DistributionCard />
+                <HeatmapCard />
+              </div>
+            </div>
           </div>
         )}
       </main>

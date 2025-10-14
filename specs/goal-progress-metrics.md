@@ -266,14 +266,339 @@ InsightsPage
 - Three new components: ~15KB total
 - Total increase: ~20KB (1.8% of bundle)
 
+## Pattern Recognition Features (Phase 5)
+
+### 4. Day of Week Card
+
+**Purpose**: Identify which days of the week the user typically weighs more or less.
+
+**Algorithm**:
+```typescript
+// Group entries by day of week (Monday-Sunday)
+// Calculate average weight for each day
+getAverageByDayOfWeek(entries): Record<string, number>
+```
+
+**Visualization**:
+- Bar chart (Recharts) showing 7 bars (Mon-Sun)
+- Color coding:
+  - Green: Lightest day
+  - Orange: Heaviest day
+  - Indigo: All other days
+- Y-axis: Weight in kg
+- X-axis: Day abbreviations (Mon, Tue, Wed, etc.)
+
+**Insights Display**:
+- Lightest day name and weight
+- Heaviest day name and weight
+- Text insight: "Your weight varies by X kg throughout the week, with [day]s being your lightest day"
+
+**Data Requirements**:
+- Minimum: 14 entries
+- Progressive: Returns null if insufficient data
+
+**Edge Cases**:
+- Missing days: Only shows days with data
+- Same weight all days: Still displays chart
+- Variation < 0.3 kg: No insight text shown
+
+### 5. Weekly Cycle Card
+
+**Purpose**: Compare weekday vs. weekend weight patterns.
+
+**Algorithm**:
+```typescript
+// Separate entries into weekdays (Mon-Fri) and weekends (Sat-Sun)
+// Calculate average for each group
+getWeekdayVsWeekendAverage(entries): { weekday, weekend, diff } | null
+```
+
+**Visualization**:
+- Two horizontal comparison bars
+- Weekday bar: Blue (#3b82f6)
+- Weekend bar: Violet (#8b5cf6)
+- Bars scale relative to higher value (100%)
+
+**Insights Display**:
+- Difference indicator with icon:
+  - ↑ TrendingUp: Weekend heavier (diff > 0.1 kg)
+  - ↓ TrendingDown: Weekday heavier (diff < -0.1 kg)
+  - — Minus: Stable (|diff| ≤ 0.1 kg)
+- Color-coded message:
+  - Orange: "Your weight typically increases by X kg on weekends"
+  - Green: "Your weight is typically X kg lighter on weekends"
+  - Gray: "Your weight remains consistent throughout the week"
+
+**Data Requirements**:
+- Minimum: 14 entries
+- Must have at least one weekday and one weekend entry
+
+### 6. Plateau Card
+
+**Purpose**: Detect and display periods where weight remained stable.
+
+**Algorithm**:
+```typescript
+// Sliding window detection
+// Plateau = weight within ±thresholdKg for minDays consecutive days
+detectPlateau(entries, thresholdKg, minDays): Array<{
+  start: string,
+  end: string,
+  avgWeight: number,
+  days: number
+}>
+
+// Default: ±0.5 kg for 7+ days
+```
+
+**Display**:
+- Shows most recent 3 plateaus
+- Each plateau card shows:
+  - Duration (days)
+  - Average weight during plateau
+  - Date range (start - end)
+  - "Stable" badge
+
+**Current Plateau Alert**:
+- Amber-highlighted banner if currently in plateau
+- Shows: "Your weight has been stable at around X kg for Y days"
+
+**Empty State**:
+- If no plateaus detected: "No plateaus detected. Your weight has been consistently changing, which is great for progress!"
+
+**Data Requirements**:
+- Minimum: 14 entries
+- Detection threshold: 0.5 kg variation for 7+ consecutive days
+
+**Edge Cases**:
+- No plateaus: Shows encouraging message
+- All entries in one plateau: Shows only that plateau
+- Current plateau: Highlighted separately from historical list
+
+## Technical Implementation (Phase 5)
+
+### Extended Analytics Functions
+
+Added to `src/lib/analytics.ts`:
+
+```typescript
+// Pattern recognition
+getAverageByDayOfWeek(entries: WeightEntry[]): Record<string, number>
+getWeekdayVsWeekendAverage(entries: WeightEntry[]): { weekday, weekend, diff } | null
+getMonthlyAverages(entries: WeightEntry[]): Array<{ month: string, avg: number }>
+detectPlateau(entries: WeightEntry[], thresholdKg: number, minDays: number): Array<Plateau>
+```
+
+### Component Architecture (Extended)
+
+```
+InsightsPage
+├── GoalSettingsCard (Phase 2)
+├── Grid (2 columns on desktop)
+│   ├── GoalProgressCard (Phase 3)
+│   └── ForecastCard (Phase 3)
+├── MilestonesCard (Phase 3)
+└── Patterns & Trends Section (Phase 5)
+    ├── Grid (2 columns on desktop)
+    │   ├── DayOfWeekCard
+    │   └── WeeklyCycleCard
+    └── PlateauCard
+```
+
+### Bundle Size Impact (Phase 5)
+
+- Pattern analytics: ~2KB
+- Three pattern components: ~12KB total
+- Recharts chart components: ~15KB (already included in Phase 3)
+- Total increase: ~14KB (1.3% of bundle)
+- New total: 1,099.76 KB
+
+## Extended Testing (Phase 5)
+
+### Manual Testing Checklist
+- [x] Day of week chart shows correct averages
+- [x] Bar colors match lightest/heaviest days
+- [x] Weekly cycle bars scale correctly
+- [x] Weekday vs weekend insights are accurate
+- [x] Plateau detection finds stable periods
+- [x] Current plateau alert shows when applicable
+- [x] "No plateaus" message displays correctly
+- [x] All pattern cards respect 14-day minimum
+- [x] Dark mode renders properly
+- [x] Mobile layout is responsive
+
+### Test Scenarios (Patterns)
+
+**Scenario 6: User with consistent Monday highs**
+- Result: Day of week chart shows Monday as heaviest (orange bar)
+
+**Scenario 7: User with weekend weight gain pattern**
+- Result: Weekly cycle shows positive difference with orange alert
+
+**Scenario 8: User in 10-day plateau**
+- Result: Plateau card shows amber current plateau alert
+
+**Scenario 9: User with constantly changing weight**
+- Result: Plateau card shows encouraging "no plateaus" message
+
+## Visual Comparison Features (Phase 6)
+
+### 7. Distribution Card
+
+**Purpose**: Show how weight is distributed across ranges using a histogram.
+
+**Algorithm**:
+```typescript
+// Group weights into buckets (default: 0.5kg buckets)
+getWeightDistribution(entries, bucketSize): Array<{
+  range: string,
+  count: number,
+  minWeight: number,
+  maxWeight: number
+}>
+```
+
+**Visualization**:
+- Histogram (Recharts bar chart)
+- X-axis: Weight ranges (e.g., "74.0-74.5 kg", "74.5-75.0 kg")
+- Y-axis: Number of days in each range
+- Color coding:
+  - Green: Most common weight range
+  - Indigo: All other ranges
+- Angled labels for better readability on mobile
+
+**Statistics Display**:
+- Most common range: Shows weight range and day count
+- Median weight: Middle value of all entries
+- Summary text: Total days logged and min/max weight range
+
+**Data Requirements**:
+- Minimum: 14 entries
+- Bucket size: 0.5 kg (configurable)
+
+**Edge Cases**:
+- All same weight: Shows single bar
+- Wide range: Automatically adjusts X-axis scale
+
+### 8. Heatmap Card (Weight Calendar)
+
+**Purpose**: Display weight data in a calendar format with color-coded cells.
+
+**Algorithm**:
+```typescript
+// Map entries to calendar grid
+getHeatmapData(entries): Array<{
+  date: string,
+  weight: number,
+  dayOfWeek: number,  // 0 = Sunday, 6 = Saturday
+  weekNumber: number   // Week since first entry
+}>
+```
+
+**Visualization**:
+- Calendar grid layout
+- Rows: Week numbers (W1, W2, W3, etc.)
+- Columns: Days of week (Sun-Sat)
+- Color gradient based on weight:
+  - Green shades: Lower weights (0-40% of range)
+  - Yellow: Mid-lower weights (40-60% of range)
+  - Orange shades: Higher weights (60-100% of range)
+- Empty cells: Gray (no data for that day)
+
+**Interactive Features**:
+- Hover tooltip: Shows full date and exact weight
+- Hover effect: Ring highlight on hovered cell
+- Legend: Color gradient with min/max weight range
+
+**Layout**:
+- Day labels at top (Sun, Mon, Tue, etc.)
+- Week numbers on left (W1, W2, W3, etc.)
+- Scrollable on mobile for many weeks
+
+**Data Requirements**:
+- Minimum: 14 entries
+- Progressive: Works with any number of weeks
+
+**Edge Cases**:
+- No weight variation: All cells same color (indigo)
+- Missing days: Shows empty gray cells
+- Multiple months: Continues vertically
+
+## Technical Implementation (Phase 6)
+
+### Extended Analytics Functions
+
+Added to `src/lib/analytics.ts`:
+
+```typescript
+// Visual comparisons
+getWeightDistribution(entries: WeightEntry[], bucketSize: number): Array<Bucket>
+getHeatmapData(entries: WeightEntry[]): Array<HeatmapCell>
+```
+
+### Component Architecture (Complete)
+
+```
+InsightsPage
+├── GoalSettingsCard (Phase 2)
+├── Grid (2 columns on desktop)
+│   ├── GoalProgressCard (Phase 3)
+│   └── ForecastCard (Phase 3)
+├── MilestonesCard (Phase 3)
+├── Patterns & Trends Section (Phase 5)
+│   ├── Grid (2 columns on desktop)
+│   │   ├── DayOfWeekCard
+│   │   └── WeeklyCycleCard
+│   └── PlateauCard
+└── Visual Analysis Section (Phase 6)
+    └── Grid (2 columns on desktop)
+        ├── DistributionCard
+        └── HeatmapCard
+```
+
+### Bundle Size Impact (Phase 6)
+
+- Visualization analytics: ~1.5KB
+- DistributionCard: ~3KB
+- HeatmapCard: ~4KB
+- Total increase: ~8.5KB (0.8% of bundle)
+- New total: 1,109.64 KB
+
+## Extended Testing (Phase 6)
+
+### Manual Testing Checklist
+- [x] Histogram bins weights correctly
+- [x] Most common range highlighted in green
+- [x] Median weight calculates correctly
+- [x] Heatmap grid aligns properly
+- [x] Color gradient reflects weight values
+- [x] Hover tooltip shows correct data
+- [x] Empty cells render as gray
+- [x] Legend displays min/max range
+- [x] Both cards respect 14-day minimum
+- [x] Dark mode renders properly
+- [x] Mobile layout scrolls horizontally if needed
+
+### Test Scenarios (Visual Comparisons)
+
+**Scenario 10: User with narrow weight range (< 1kg)**
+- Result: Histogram shows few buckets, heatmap has subtle color variation
+
+**Scenario 11: User with wide weight range (> 5kg)**
+- Result: Histogram spreads across multiple buckets, heatmap shows clear color gradient
+
+**Scenario 12: User with consistent weight**
+- Result: Histogram shows single tall bar, heatmap all one color
+
+**Scenario 13: User with missing days**
+- Result: Heatmap shows gray empty cells for missing dates
+
 ## Future Enhancements
 
-### Phase 5+ (Not Implemented)
-- Day-of-week patterns (heavier on weekends?)
-- Plateau detection (stable for X days)
-- Month-over-month trends
-- Distribution histogram
-- Heatmap visualization
+### Phase 7 (Planned)
+- Polish & optimization
+- Loading states
+- Accessibility improvements
 
 ### Potential Improvements
 - Confidence intervals for forecasts
