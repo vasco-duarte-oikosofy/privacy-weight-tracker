@@ -507,8 +507,16 @@ getHeatmapData(entries): Array<{
 
 **Interactive Features**:
 - Hover tooltip: Shows full date and exact weight
+  - Fixed positioned above cell to avoid layout shift
+  - Appears 80px above hovered cell
+  - White background with indigo border and shadow
+  - No scrolling issues or page extension
 - Hover effect: Ring highlight on hovered cell
-- Legend: Color gradient with min/max weight range
+- Legend with hover tooltips:
+  - Each color rectangle is interactive
+  - Shows exact weight range on hover
+  - Ring highlight effect on hover
+  - Tooltip displays below legend with range
 
 **Layout**:
 - Day labels at top (Sun, Mon, Tue, etc.)
@@ -562,7 +570,8 @@ InsightsPage
 - DistributionCard: ~3KB
 - HeatmapCard: ~4KB
 - Total increase: ~8.5KB (0.8% of bundle)
-- New total: 1,109.64 KB
+- Initial total: 1,109.64 KB
+- After hover improvements: 1,111.25 KB (+1.6KB)
 
 ## Extended Testing (Phase 6)
 
@@ -573,6 +582,10 @@ InsightsPage
 - [x] Heatmap grid aligns properly
 - [x] Color gradient reflects weight values
 - [x] Hover tooltip shows correct data
+- [x] Tooltip doesn't cause page overflow or layout shift
+- [x] Tooltip positioned correctly above cells
+- [x] Legend rectangles are hoverable
+- [x] Legend tooltips show correct weight ranges
 - [x] Empty cells render as gray
 - [x] Legend displays min/max range
 - [x] Both cards respect 14-day minimum
